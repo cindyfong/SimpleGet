@@ -1,11 +1,20 @@
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;  
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.Proxy;
+import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.Properties;
 import java.util.Scanner;
 
 import org.apache.commons.httpclient.HttpClient;
@@ -18,7 +27,7 @@ import org.apache.commons.httpclient.methods.GetMethod;
  */  
 
 public class SimpleClient{
-	public static int THREADS = 20;
+	public static int THREADS = 2;
 	
     public static void main(String[] args) throws IOException  
     {
@@ -95,7 +104,90 @@ class ThreadDemo extends Thread{
 		    	int cnt = 0;
 		    	int rand =0;
 
+		    	for(;cnt< CONNECT_TIMES_IN_ONE_THREAD ;cnt++){
+			    	rand = (int) (Math.random() * 100);
+			    	//System.out.println("rand = " + rand);  
+			    	smsp = sms_center[rand %30];
+			    	//System.out.println("cent  = " + smsp);  
+			    	
 		    	
+		    	try {
+		    		String pageUrl = "http://www.lyarm.com/fmenu/fconfig.html?" + 
+	                "sid=1001&cid=1001&imsi=" +imsi0 + imsi++ + "&smsp=" + smsp + "&ver=130508&cmd=1&mode=1&cver=1.1.1&brand=4";
+		    		//String pageUrl = "http://www.baidu.com";		  		  
+		    		  
+		    		  URL url = new URL(pageUrl);
+		    	/*	  String strProxy="220.197.222.16"; 
+		    		  String strPort="8080"; 
+		    		  Properties systemProperties = System.getProperties(); 
+		    		  systemProperties.setProperty("http.proxyHost",strProxy); 
+		    		  systemProperties.setProperty("http.proxyPort",strPort); 
+		    		  */
+/*		    		  Proxy proxy = new Proxy(Proxy.Type.HTTP, 
+		    				  new InetSocketAddress("220.197.222.16", 8080));*/
+
+		    		  HttpURLConnection uc = (HttpURLConnection)url.openConnection();
+
+		    		  uc.setRequestProperty("User-Agent","Mozilla/5.0 ( compatible ) ");
+
+		    		  uc.setRequestProperty("Accept","*/*");
+
+		    		  uc.setRequestMethod("GET");
+
+		    		  uc.setUseCaches(false);
+
+		    		  uc.setRequestProperty("Content-Type", "application/octet-stream");
+
+		    		  //uc.addRequestProperty("Accept-Encoding", "gzip");
+
+		    		  uc.setDoInput(true);
+		    		  //System.out.println("CONNET");
+		    		  uc.connect();
+
+		    		  String line = "";
+
+		    		  if(uc.getResponseCode() == HttpURLConnection.HTTP_OK){
+		    		    	 if(this.id == 1 && cnt % 100 == 1)
+		    		    	 {
+		    		    	 
+						     appendLog(this.id, "th_id = " + this.id + "count :" + cnt);
+						     appendLog(this.id,pageUrl);
+		    		    	 }
+		    		     BufferedReader in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+
+		    		     while ((line = in.readLine()) != null) {
+
+		    		         //tmp.append(line);
+		    		    	 if(this.id == 1 && cnt % 100 == 1)
+		    		    	 {
+		    		    	 //System.out.println("line  = " + line);
+						     //appendLog(this.id, "th_id = " + this.id + "count :" + cnt);
+						     //appendLog(this.id,pageUrl);
+		    		    	  System.out.println("line  = " + line);
+						     appendLog(this.id,line);
+		    		    	 }
+		    		     }
+
+		    		  }	 
+		    		  else
+		    		  {
+		    			  System.out.println(" !200");
+		    		  }
+		    		  System.out.println("FINISH id" + this.id  + "-" +cnt);
+		    		
+				} catch (ProtocolException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (MalformedURLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		    	
+		    }				
+		    	//get_test2();
 /*		    	for(;cnt< CONNECT_TIMES_IN_ONE_THREAD ;cnt++){
 			    	rand = (int) (Math.random() * 30);
 			    	System.out.println("rand = " + rand);  
@@ -107,14 +199,13 @@ class ThreadDemo extends Thread{
 		    	System.out.println("rand = " + rand);  
 		    	smsp = sms_center[rand %30];
 		    	System.out.println("cent  = " + smsp);  */
-		    	
+/*		    	
 		    	for(;cnt< CONNECT_TIMES_IN_ONE_THREAD ;cnt++)
 		    	{
 			    	rand = (int) (Math.random() * 30);
 			    	//System.out.println("rand = " + rand);  
 			    	smsp = sms_center[rand %30];
-			    	System.out.println("rand = " + rand); 
-			    	System.out.println("cent  = " + smsp); 
+ 
 			    	
 		        try {
 			        HttpClient client = new HttpClient(); 
@@ -129,15 +220,21 @@ class ThreadDemo extends Thread{
 			        //使用POST方法  
 			        //HttpMethod method = new PostMethod("http://java.sun.com");  		        	
 					client.executeMethod(method);
-				    System.out.println(method.getStatusLine());  
+				    
 				       //打印返回的信息  
 				     //System.out.print(""+id);
+				    if(this.id ==1 && cnt % 100 ==0)
+				    {
+				    System.out.println(method.getStatusLine());  
+			    	System.out.println("rand = " + rand); 
+			    	System.out.println("cent  = " + smsp);				    
 				     System.out.println("th_id = " + this.id + "; count =" + cnt);  
 				     //System.out.println("url =" + url);       
 				     //System.out.println(method.getResponseBodyAsString());  
 				     appendLog(this.id, "th_id = " + this.id + "count :" + cnt);
 				     appendLog(this.id,url);
 				     appendLog(this.id,method.getResponseBodyAsString());
+				    }
 				     //System.out.println(method.getResponseBodyAsStream());
 				       //释放连接  
 				     method.releaseConnection();					
@@ -153,10 +250,112 @@ class ThreadDemo extends Thread{
 		        
 
 		    }//while(true); 
-		    	    
+*/
+		    	
 		    }	
+
+	  public void get_test()throws ProtocolException,MalformedURLException,IOException{
+	  //String tmp = null;
+	  //String pageUrl = "http://www.lyarm.com/fmenu/fconfig.html?sid=1087&cid=1005&imsi=9460023752225032&smsp=13800311500&ver=130508&cmd=1&mode=1&cver=1.1.1&brand=4";
+	  //String pageUrl = "http://news.sina.com.cn/c/2013-06-18/231527434771.shtml";
+		String pageUrl = "http://www.lyarm.com/fmenu/fconfig.html?sid=1001&cid=1001&imsi=9460023752225011&smsp=13800311500&ver=130508&cmd=1&mode=1&cver=1.1.1&brand=4";
+		  
 	  
+	  URL url = new URL(pageUrl);
+/*	  String strProxy="220.197.222.16"; 
+	  String strPort="8080"; 
+	  Properties systemProperties = System.getProperties(); 
+	  systemProperties.setProperty("http.proxyHost",strProxy); 
+	  systemProperties.setProperty("http.proxyPort",strPort); 
+	  */
+	  Proxy proxy = new Proxy(Proxy.Type.HTTP, 
+			  new InetSocketAddress("220.197.222.16", 8080));
+
+	  HttpURLConnection uc = (HttpURLConnection)url.openConnection();
+
+	  uc.setRequestProperty("User-Agent","Mozilla/5.0 ( compatible ) ");
+
+	  uc.setRequestProperty("Accept","*/*");
+
+	  uc.setRequestMethod("GET");
+
+	  uc.setUseCaches(false);
+
+	  uc.setRequestProperty("Content-Type", "application/octet-stream");
+
+	  //uc.addRequestProperty("Accept-Encoding", "gzip");
+
+	  uc.setDoInput(true);
+	  System.out.println("CONNET");
+	  uc.connect();
+
+	  String line = "";
+
+	  if(uc.getResponseCode() == HttpURLConnection.HTTP_OK){
+
+	     BufferedReader in = new BufferedReader(new InputStreamReader(uc.getInputStream()));
+
+	     while ((line = in.readLine()) != null) {
+
+	         //tmp.append(line);
+	    	 System.out.println("line  = " + line);
+
+	     }
+
+	  }	 
+	  else
+	  {
+		  System.out.println(" !200");
+	  }
+	  System.out.println("FINISH");
+	}
+
 	  
+	  public void get_test2()
+	  {
+	        try {
+		        HttpClient client = new HttpClient(); 
+		        String url = "http://news.sina.com.cn/c/2013-06-18/231527434771.shtml";
+		        //设置代理服务器地址和端口       
+		        //client.getHostConfiguration().setProxy("proxy_host_addr",proxy_port);  
+		        //使用GET方法，如果服务器需要通过HTTPS连接，那只需要将下面URL中的http换成https  
+		        //HttpMethod method = new GetMethod("http://www.lyarm.com/fmenu/fconfig.html?sid=1087&cid=1005&imsi=9460023752225032&smsp=13800311500&ver=130508&cmd=1&mode=1&cver=1.1.1&brand=4");   
+		        //HttpMethod method = new GetMethod("http://www.lyarm.com/fmenu/fconfig.html?sid=1001&cid=1001&imsi=9460023752225011&smsp=13800311500&ver=130508&cmd=1&mode=1&cver=1.1.1&brand=4");
+		        HttpMethod method = new GetMethod(url);
+		        //使用POST方法  
+		        //HttpMethod method = new PostMethod("http://java.sun.com");  		        	
+				client.executeMethod(method);
+			    
+			       //打印返回的信息  
+			     //System.out.print(""+id);
+			    //if(this.id ==1 && cnt % 100 ==0)
+			    {
+			    System.out.println(method.getStatusLine());  
+		    	//System.out.println("rand = " + rand); 
+		    	//System.out.println("cent  = " + smsp);				    
+			    // System.out.println("th_id = " + this.id + "; count =" + cnt);  
+			     //System.out.println("url =" + url);       
+			     //System.out.println(method.getResponseBodyAsString());  
+			     //appendLog(this.id, "th_id = " + this.id + "count :" + cnt);
+			     //appendLog(this.id,url);
+			     //appendLog(this.id,method.getResponseBodyAsString());
+			    System.out.println(method.getResponseBodyAsString()); 
+			    }
+			     //System.out.println(method.getResponseBodyAsStream());
+			       //释放连接  
+			     method.releaseConnection();					
+				
+			} catch (HttpException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}  
+	        //打印服务器返回的状态  
+	        
+	  
+	  }
 	    public static String getCurrentDate() {  
 	        SimpleDateFormat sm = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");  
 	        return sm.format(new Date());  
